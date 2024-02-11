@@ -380,6 +380,8 @@ function onInput(){
   $('.hint').hide()
 
   var hex = $("#hex").val();
+  hex = hex.replaceAll(/[^a-fA-F0-9]/g, '');
+  $("#hex").val(hex);
   if (hex.length > 4) {  
     var bin = hex2bin(hex);
     var bestMatchCount = 0;
