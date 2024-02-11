@@ -177,13 +177,13 @@ instruction: PC+12 if I=0,R=1 (shift by register), otherwise PC+8 (shift by
 immediate).
 
 Returned CPSR Flags
-If S=1, Rd<>R15, logical operations (AND,EOR,TST,TEQ,ORR,MOV,BIC,MVN):
+If S=1, Rd&lt;&gt;R15, logical operations (AND,EOR,TST,TEQ,ORR,MOV,BIC,MVN):
 
   V=not affected
   C=carryflag of shift operation (not affected if LSL#0 or Rs=00h)
   Z=zeroflag of result
   N=signflag of result (result bit 31)
-If S=1, Rd<>R15, arithmetic operations (SUB,RSB,ADD,ADC,SBC,RSC,CMP,CMN):
+If S=1, Rd&lt;&gt;R15, arithmetic operations (SUB,RSB,ADD,ADC,SBC,RSC,CMP,CMN):
 
   V=overflowflag of result
   C=carryflag of result
@@ -197,7 +197,7 @@ IF S=1, with unused Rd bits=1111b, {P} opcodes (CMPP/CMNP/TSTP/TEQP):
   The PC bits in R15 are left unchanged in all modes.
 If S=1, Rd=R15; should not be used in user mode:
 
-  CPSR = SPSR_<current mode>
+  CPSR = SPSR_&lt;current mode&gt;
   PC = result
   For example: MOVS PC,R14  ;return from SWI (PC=R14_svc, CPSR=SPSR_svc).
 If S=0: Flags are not affected (not allowed for CMP,CMN,TEQ,TST).
@@ -205,7 +205,7 @@ If S=0: Flags are not affected (not allowed for CMP,CMN,TEQ,TST).
 The instruction “MOV R0,R0” is used as “NOP” opcode in 32bit ARM state.
 
 Execution Time: (1+p)S+rI+pN. Whereas r=1 if I=0 and R=1 (ie. shift by 
-register); otherwise r=0. And p=1 if Rd=R15; otherwise p=0.    
+register); otherwise r=0. And p=1 if Rd=R15; otherwise p=0. 
     </pre>
     <pre class="hint instruction-psr-imm instruction-psr-reg">
 ARM Opcodes: PSR Transfer (MRS, MSR)
@@ -217,7 +217,7 @@ These instructions occupy an unused area (TEQ,TST,CMP,CMN with S=0) of ALU opcod
   27-26  Must be 00b for this instruction
   25     I - Immediate Operand Flag  (0=Register, 1=Immediate) (Zero for MRS)
   24-23  Must be 10b for this instruction
-  22     Psr - Source/Destination PSR  (0=CPSR, 1=SPSR_<current mode>)
+  22     Psr - Source/Destination PSR  (0=CPSR, 1=SPSR_&lt;current mode&gt;)
   21     Opcode
            0: MRS{cond} Rd,Psr          ;Rd = Psr
            1: MSR{cond} Psr{_field},Op  ;Psr[field] = Op
@@ -234,7 +234,7 @@ These instructions occupy an unused area (TEQ,TST,CMP,CMN with S=0) of ALU opcod
     15-12   Not used, must be 1111b.
   For MSR Psr,Rm (I=0)
     11-4    Not used, must be zero. (otherwise BX)
-    3-0     Rm - Source Register <op>  (R0-R14)
+    3-0     Rm - Source Register &lt;op&gt;  (R0-R14)
   For MSR Psr,Imm (I=1)
     11-8    Shift applied to Imm   (ROR in steps of two 0-30)
     7-0     Imm - Unsigned 8bit Immediate
@@ -333,11 +333,11 @@ Opcode Format
   27-25  Must be 000b for this instruction
   24-21  Opcode
           0000b: MUL{cond}{S}   Rd,Rm,Rs        ;multiply   Rd = Rm*Rs
-          0001b: MLA{cond}{S}   Rd,Rm,Rs,Rn     ;mul.& accumulate Rd = Rm*Rs+Rn
+          0001b: MLA{cond}{S}   Rd,Rm,Rs,Rn     ;mul.&amp; accumulate Rd = Rm*Rs+Rn
           0100b: UMULL{cond}{S} RdLo,RdHi,Rm,Rs ;multiply   RdHiLo=Rm*Rs
-          0101b: UMLAL{cond}{S} RdLo,RdHi,Rm,Rs ;mul.& acc. RdHiLo=Rm*Rs+RdHiLo
+          0101b: UMLAL{cond}{S} RdLo,RdHi,Rm,Rs ;mul.&amp; acc. RdHiLo=Rm*Rs+RdHiLo
           0110b: SMULL{cond}{S} RdLo,RdHi,Rm,Rs ;sign.mul.  RdHiLo=Rm*Rs
-          0111b: SMLAL{cond}{S} RdLo,RdHi,Rm,Rs ;sign.m&a.  RdHiLo=Rm*Rs+RdHiLo
+          0111b: SMLAL{cond}{S} RdLo,RdHi,Rm,Rs ;sign.m&amp;a.  RdHiLo=Rm*Rs+RdHiLo
           1000b: SMLAxy{cond}   Rd,Rm,Rs,Rn     ;Rd=HalfRm*HalfRs+Rn
           1001b: SMLAWy{cond}   Rd,Rm,Rs,Rn     ;Rd=(Rm*HalfRs)/10000h+Rn
           1001b: SMULWy{cond}   Rd,Rm,Rs        ;Rd=(Rm*HalfRs)/10000h
@@ -450,14 +450,14 @@ Opcode Format
   6-5    Opcode (0-3)
          When Bit 20 L=0 (Store) (and Doubleword Load/Store):
           0: Reserved for SWP instruction
-          1: STR{cond}H  Rd,<Address>  ;Store halfword   [a]=Rd
-          2: LDR{cond}D  Rd,<Address>  ;Load Doubleword  R(d)=[a], R(d+1)=[a+4]
-          3: STR{cond}D  Rd,<Address>  ;Store Doubleword [a]=R(d), [a+4]=R(d+1)
+          1: STR{cond}H  Rd,&lt;Address&gt;  ;Store halfword   [a]=Rd
+          2: LDR{cond}D  Rd,&lt;Address&gt;  ;Load Doubleword  R(d)=[a], R(d+1)=[a+4]
+          3: STR{cond}D  Rd,&lt;Address&gt;  ;Store Doubleword [a]=R(d), [a+4]=R(d+1)
          When Bit 20 L=1 (Load):
           0: Reserved.
-          1: LDR{cond}H  Rd,<Address>  ;Load Unsigned halfword (zero-extended)
-          2: LDR{cond}SB Rd,<Address>  ;Load Signed byte (sign extended)
-          3: LDR{cond}SH Rd,<Address>  ;Load Signed halfword (sign extended)
+          1: LDR{cond}H  Rd,&lt;Address&gt;  ;Load Unsigned halfword (zero-extended)
+          2: LDR{cond}SB Rd,&lt;Address&gt;  ;Load Signed byte (sign extended)
+          3: LDR{cond}SH Rd,&lt;Address&gt;  ;Load Signed halfword (sign extended)
   4      Reserved, must be set (1)
   3-0    When above Bit 22 I=0:
            Rm - Offset Register            (R0-R14) (not including R15)
@@ -475,20 +475,20 @@ STRD/LDRD: Rd must be an even numbered register (R0,R2,R4,R6,R8,R10,R12).
 
 STRD/LDRD: Address must be double-word aligned (multiple of eight).
 
-Instruction Formats for <Address>
+Instruction Formats for &lt;Address&gt;
 An expression which generates an address:
 
-  <expression>                  ;an immediate used as address
+  &lt;expression&gt;                  ;an immediate used as address
   ;*** restriction: must be located in range PC+/-255+8, if so,
   ;*** assembler will calculate offset and use PC (R15) as base.
 Pre-indexed addressing specification:
 
   [Rn]                          ;offset = zero
-  [Rn, <#{+/-}expression>]{!}   ;offset = immediate
+  [Rn, &lt;#{+/-}expression&gt;]{!}   ;offset = immediate
   [Rn, {+/-}Rm]{!}              ;offset = register
 Post-indexed addressing specification:
 
-  [Rn], <#{+/-}expression>      ;offset = immediate
+  [Rn], &lt;#{+/-}expression&gt;      ;offset = immediate
   [Rn], {+/-}Rm                 ;offset = register
 Whereas…
 
@@ -515,9 +515,9 @@ Opcode Format
   When above Bit 24 P=1 (Pre-indexing, write-back is optional):
     21     W - Write-back bit (0=no write-back, 1=write address into base)
   20     L - Load/Store bit (0=Store to memory, 1=Load from memory)
-          0: STR{cond}{B}{T} Rd,<Address>   ;[Rn+/-<offset>]=Rd
-          1: LDR{cond}{B}{T} Rd,<Address>   ;Rd=[Rn+/-<offset>]
-         (1: PLD <Address> ;Prepare Cache for Load, see notes below)
+          0: STR{cond}{B}{T} Rd,&lt;Address&gt;   ;[Rn+/-&lt;offset&gt;]=Rd
+          1: LDR{cond}{B}{T} Rd,&lt;Address&gt;   ;Rd=[Rn+/-&lt;offset&gt;]
+         (1: PLD &lt;Address&gt; ;Prepare Cache for Load, see notes below)
           Whereas, B=Byte, T=Force User Mode (only for POST-Indexing)
   19-16  Rn - Base register               (R0..R15) (including R15=PC+8)
   15-12  Rd - Source/Destination Register (R0..R15) (including R15=PC+12)
@@ -528,24 +528,24 @@ Opcode Format
     6-5    Shift Type             (0=LSL, 1=LSR, 2=ASR, 3=ROR)
     4      Must be 0 (Reserved, see The Undefined Instruction)
     3-0    Rm - Offset Register   (R0..R14) (not including PC=R15)
-Instruction Formats for <Address>
+Instruction Formats for &lt;Address&gt;
 An expression which generates an address:
 
-  <expression>                  ;an immediate used as address
+  &lt;expression&gt;                  ;an immediate used as address
   ;*** restriction: must be located in range PC+/-4095+8, if so,
   ;*** assembler will calculate offset and use PC (R15) as base.
 Pre-indexed addressing specification:
 
   [Rn]                          ;offset = zero
-  [Rn, <#{+/-}expression>]{!}   ;offset = immediate
-  [Rn, {+/-}Rm{,<shift>} ]{!}   ;offset = register shifted by immediate
+  [Rn, &lt;#{+/-}expression&gt;]{!}   ;offset = immediate
+  [Rn, {+/-}Rm{,&lt;shift&gt;} ]{!}   ;offset = register shifted by immediate
 Post-indexed addressing specification:
 
-  [Rn], <#{+/-}expression>      ;offset = immediate
-  [Rn], {+/-}Rm{,<shift>}       ;offset = register shifted by immediate
+  [Rn], &lt;#{+/-}expression&gt;      ;offset = immediate
+  [Rn], {+/-}Rm{,&lt;shift&gt;}       ;offset = register shifted by immediate
 Whereas…
 
-  <shift>  immediate shift such like LSL#4, ROR#2, etc. (see ALU opcodes).
+  &lt;shift&gt;  immediate shift such like LSL#4, ROR#2, etc. (see ALU opcodes).
   {!}      exclamation mark ("!") indicates write-back (Rn will be updated).
 Notes
 Shift amount 0 has special meaning, as described for ALU opcodes.
@@ -554,9 +554,9 @@ When writing a word (32bit) to memory, the address should be word-aligned.
 
 When reading a byte from memory, upper 24 bits of Rd are zero-extended.
 
-LDR PC,<op> on ARMv4 leaves CPSR.T unchanged.
+LDR PC,&lt;op&gt; on ARMv4 leaves CPSR.T unchanged.
 
-LDR PC,<op> on ARMv5 sets CPSR.T to <op> Bit0, (1=Switch to Thumb).
+LDR PC,&lt;op&gt; on ARMv5 sets CPSR.T to &lt;op&gt; Bit0, (1=Switch to Thumb).
 
 When reading a word from a halfword-aligned address (which is located in the 
 middle between two word-aligned addresses), the lower 16bit of Rd will 
@@ -575,16 +575,16 @@ Return: CPSR flags are not affected.
 
 Execution Time: For normal LDR: 1S+1N+1I. For LDR PC: 2S+2N+1I. For STR: 2N.
 
-PLD <Address> ;Prepare Cache for Load
+PLD &lt;Address&gt; ;Prepare Cache for Load
 PLD must use following settings cond=1111b, P=1, B=1, W=0, L=1, Rd=1111b, the address 
 may not use post-indexing, and may not use writeback, the opcode is encoded 
-identical as LDRNVB R15,<Address>.
+identical as LDRNVB R15,&lt;Address&gt;.
 
 PLD signalizes to the memory system that a specific memory address will be 
 soon accessed, the memory system may use this hint to prepare caching/pipelining, 
 aside from that, PLD does not have any affect to the program logic, and behaves identical as NOP.
 
-PLD supported by ARMv5TE only, not ARMv5, not ARMv5TExP.    
+PLD supported by ARMv5TE only, not ARMv5, not ARMv5TExP.
     </pre>
     <pre class="hint instruction-transreg9">
     </pre>
@@ -610,11 +610,11 @@ Opcode Format
   27-25  Must be 100b for this instruction
   24     P - Pre/Post (0=post; add offset after transfer, 1=pre; before trans.)
   23     U - Up/Down Bit (0=down; subtract offset from base, 1=up; add to base)
-  22     S - PSR & force user bit (0=No, 1=load PSR or force user mode)
+  22     S - PSR &amp; force user bit (0=No, 1=load PSR or force user mode)
   21     W - Write-back bit (0=no write-back, 1=write address into base)
   20     L - Load/Store bit (0=Store to memory, 1=Load from memory)
-          0: STM{cond}{amod} Rn{!},<Rlist>{^}  ;Store (Push)
-          1: LDM{cond}{amod} Rn{!},<Rlist>{^}  ;Load  (Pop)
+          0: STM{cond}{amod} Rn{!},&lt;Rlist&gt;{^}  ;Store (Push)
+          1: LDM{cond}{amod} Rn{!},&lt;Rlist&gt;{^}  ;Load  (Pop)
           Whereas, {!}=Write-Back (W), and {^}=PSR/User Mode (S)
   19-16  Rn - Base register                (R0-R14) (not including R15)
   15-0   Rlist - Register List
@@ -651,7 +651,7 @@ SP is decremented when pushing/storing data, and incremented when popping/loadin
 When S Bit is set (S=1)
 If instruction is LDM and R15 is in the list: (Mode Changes)
 
-  While R15 loaded, additionally: CPSR=SPSR_<current mode>
+  While R15 loaded, additionally: CPSR=SPSR_&lt;current mode&gt;
 Otherwise: (User bank transfer)
 
   Rlist is referring to User Bank Registers, R0-R15 (rather than
@@ -665,7 +665,7 @@ The base address should be usually word-aligned.
 
 LDM Rn,…,PC on ARMv4 leaves CPSR.T unchanged.
 
-LDR Rn,…,PC on ARMv5 sets CPSR.T to <op> Bit0, (1=Switch to Thumb).
+LDR Rn,…,PC on ARMv5 sets CPSR.T to &lt;op&gt; Bit0, (1=Switch to Thumb).
 
 Transfer Order
 The lowest Register in Rlist (R0 if its in the list) will be loaded/stored to/from the lowest memory address.
@@ -698,7 +698,7 @@ Branch with Link can be used to ‘call’ to a sub-routine, which may then ‘r
 
 Execution Time: 2S + 1N
 
-Return: No flags affected.    
+Return: No flags affected.
     </pre>
      <pre class="hint instruction-codatatrans">
 Coprocessor Data Transfers (LDC, STC) (with Memory read/write)
@@ -710,10 +710,10 @@ Coprocessor Data Transfers (LDC, STC) (with Memory read/write)
   22     N - Transfer length (0-1, interpretation depends on co-processor)
   21     W - Write-back bit (0=no write-back, 1=write address into base)
   20     Opcode (0-1)
-          0: STC{cond}{L} Pn,Cd,<Address>  ;Store to memory (from coprocessor)
-          0: STC2{L}      Pn,Cd,<Address>  ;Store to memory (from coprocessor)
-          1: LDC{cond}{L} Pn,Cd,<Address>  ;Read from memory (to coprocessor)
-          1: LDC2{L}      Pn,Cd,<Address>  ;Read from memory (to coprocessor)
+          0: STC{cond}{L} Pn,Cd,&lt;Address&gt;  ;Store to memory (from coprocessor)
+          0: STC2{L}      Pn,Cd,&lt;Address&gt;  ;Store to memory (from coprocessor)
+          1: LDC{cond}{L} Pn,Cd,&lt;Address&gt;  ;Read from memory (to coprocessor)
+          1: LDC2{L}      Pn,Cd,&lt;Address&gt;  ;Read from memory (to coprocessor)
           whereas {L} indicates long transfer (Bit 22: N=1)
   19-16  Rn     - ARM Base Register              (R0-R15)     (R15=PC+8)
   15-12  Cd     - Coprocessor src/dest Register  (C0-C15)
@@ -746,8 +746,8 @@ Coprocessor Data Operations (CDP) (without Memory or ARM Register operand)
   31-28  Condition (or 1111b for CDP2 opcode on ARMv5 and up)
   27-24  Must be 1110b for this instruction
          ARM-Opcode (fixed)
-           CDP{cond} Pn,<cpopc>,Cd,Cn,Cm{,<cp>}
-           CDP2      Pn,<cpopc>,Cd,Cn,Cm{,<cp>}
+           CDP{cond} Pn,&lt;cpopc&gt;,Cd,Cn,Cm{,&lt;cp&gt;}
+           CDP2      Pn,&lt;cpopc&gt;,Cd,Cn,Cm{,&lt;cp&gt;}
   23-20  CP Opc - Coprocessor operation code       (0-15)
   19-16  Cn     - Coprocessor operand Register     (C0-C15)
   15-12  Cd     - Coprocessor destination Register (C0-C15)
@@ -770,10 +770,10 @@ Coprocessor Register Transfers (MRC, MCR) (with ARM Register read/write)
   27-24  Must be 1110b for this instruction
   23-21  CP Opc - Coprocessor operation code         (0-7)
   20     ARM-Opcode (0-1)
-          0: MCR{cond} Pn,<cpopc>,Rd,Cn,Cm{,<cp>}   ;move from ARM to CoPro
-          0: MCR2      Pn,<cpopc>,Rd,Cn,Cm{,<cp>}   ;move from ARM to CoPro
-          1: MRC{cond} Pn,<cpopc>,Rd,Cn,Cm{,<cp>}   ;move from CoPro to ARM
-          1: MRC2      Pn,<cpopc>,Rd,Cn,Cm{,<cp>}   ;move from CoPro to ARM
+          0: MCR{cond} Pn,&lt;cpopc&gt;,Rd,Cn,Cm{,&lt;cp&gt;}   ;move from ARM to CoPro
+          0: MCR2      Pn,&lt;cpopc&gt;,Rd,Cn,Cm{,&lt;cp&gt;}   ;move from ARM to CoPro
+          1: MRC{cond} Pn,&lt;cpopc&gt;,Rd,Cn,Cm{,&lt;cp&gt;}   ;move from CoPro to ARM
+          1: MRC2      Pn,&lt;cpopc&gt;,Rd,Cn,Cm{,&lt;cp&gt;}   ;move from CoPro to ARM
   19-16  Cn     - Coprocessor source/dest. Register  (C0-C15)
   15-12  Rd     - ARM source/destination Register    (R0-R15)
   11-8   Pn     - Coprocessor number                 (P0-P15)
@@ -783,7 +783,7 @@ Coprocessor Register Transfers (MRC, MCR) (with ARM Register read/write)
 MCR/MRC supported by ARMv2 and up, MCR2/MRC2 by ARMv5 and up.
 
 A22i syntax allows to use MOV with Rd specified as first (dest), 
-or last (source) operand. Native MCR/MRC syntax uses Rd as middle operand, <cp> can be ommited if <cp> is zero.
+or last (source) operand. Native MCR/MRC syntax uses Rd as middle operand, &lt;cp&gt; can be ommited if &lt;cp&gt; is zero.
 
 When using MCR with R15: Coprocessor will receive a data value of PC+12.
 
@@ -830,9 +830,9 @@ Execution SWI/BKPT:
 
   R14_svc=PC+4     R14_abt=PC+4   ;save return address
   SPSR_svc=CPSR    SPSR_abt=CPSR  ;save CPSR flags
-  CPSR=<changed>   CPSR=<changed> ;Enter svc/abt, ARM state, IRQs disabled
+  CPSR=&lt;changed&gt;   CPSR=&lt;changed&gt; ;Enter svc/abt, ARM state, IRQs disabled
   PC=VVVV0008h     PC=VVVV000Ch   ;jump to SWI/PrefetchAbort vector address
-    </pre>
+      </pre>
 
 <script>
 var table = `
