@@ -11,6 +11,9 @@ body{
   font-family: verdana;
   text-align: center;
 }
+table {
+  padding-bottom:30px;
+}
 tr {
   height: 60px;
 }
@@ -46,6 +49,29 @@ margin-top:50px
   outline: 1px solid #33d;
   border-radius: 5px;
 }
+
+.bitnum{
+  font-size: 12px;
+  position: absolute;
+  padding:5px 10px;
+  margin-top: -44px;
+  background: rgba(93,90,190, 0.5);
+  text-align: center;
+  border-radius: 6px;
+}
+.bitnum::after {
+ position: absolute;
+  left: 50%;
+  content: "";
+  width: 0;
+  height: 0;
+  margin-top: 20px;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 7px solid rgba(93,90,190, 0.5);
+}
+
+
 .tooltip{
   position: absolute;
   padding:5px 10px;
@@ -602,7 +628,7 @@ No assembler mnemonic exists, following bitstreams are (not) reserved.
   cond01111111xxxxxxxxxxxx1111xxxx - free for user.
 Execution time: 2S+1I+1N.
     </pre>
-    <pre class="hint Instruction-blocktrans">
+    <pre class="hint instruction-blocktrans">
  ARM Opcodes: Memory: Block Data Transfer (LDM, STM)
 Opcode Format
   Bit    Expl.
@@ -895,13 +921,14 @@ function sliceBin(bin, fields){
   Object.keys(fields).forEach(key => {
     const value = fields[key];
     const part=bin.substring(value.start, value.end+1)
-    str = "<span class='operands' data-start='" + value.start + "' title='" + key + "'>" + reverseString(part) + "</span>" +str
+    str = "<span class='operands' data-start='" + value.start + "' data-end='" + value.end + "' title='" + key + "'>" + reverseString(part) + "</span>" +str
   });
   return str;
 }
 
 function onInput(){
   $(".operands").remove();
+  $(".bitnum").remove();
   $(".tooltip").remove();
   $("#cmd").text("");
   $("#bin-parsed").text("");
@@ -944,7 +971,16 @@ function onInput(){
       }
       sorted.forEach(e => document.querySelector("#ops").appendChild(e));
       $(".operands").each(function(){
-         var coord = $(this).offset();
+        var coord = $(this).offset();
+        var bitnumText;
+
+        if ($(this).data('start') === $(this).data('end')){
+          bitnumText = $(this).data('start');
+        } else {
+          bitnumText = $(this).data('end') + ' - ' + $(this).data('start');
+        }
+
+        $('<div class="bitnum">' + bitnumText + '</div>').css({left: coord.left + 'px'}).insertBefore("#ops")
         $('<div class="tooltip">' + $(this).attr('title') + '</div>').css({left: coord.left + 'px'}).insertAfter("#ops")       
       }) 
     }
