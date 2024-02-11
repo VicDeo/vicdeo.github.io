@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>My Web Page</title>
+    <meta charset="UTF-8">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <style>
+body{
+  background-color: #95AFBA;
+  font-size:18px;
+  text-align: center;
+}
+tr {
+  height: 60px;
+}
+td {
+  padding:5px;
+}
+td:first-child {
+  width: 150px;
+}
+
+#wrapper {
+  margin: 0 auto;
+  width: 500px;
+  text-align: left;
+}
+#cmd{
+  background-color: #54DEFD;
+}
+.block{
+  margin:30px 0;
+}
+.hint {
+display: none;
+margin-top:50px
+}
+.operands{
+  background-color: #54DEFD;
+  padding: 0 10px;
+  margin: 0 10px;
+  outline: 1px solid #33d;
+  border-radius: 5px;
+}
+.tooltip{
+  position: absolute;
+  padding:5px 10px;
+  margin-top: 16px;
+  background: rgba(93,90,190, 0.5);
+  text-align: center;
+  border-radius: 6px;
+}
+.tooltip::before {
+ position: absolute;
+  content: "";
+  width: 0;
+  height: 0;
+  margin-top: -12px;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 7px solid rgba(93,90,190, 0.5);
+}
+    </style>
+  </head>
+  <body>
+    <div id="wrapper">
+      <h2>ARM helper</h2>
+      <div class="block">Inspired by <a target="_blank" href="https://rust-console.github.io/gbatek-gbaonly/#arm-binary-opcode-format">ARM Binary Opcode Format</a></div>
+      <table>
+      <tr>
+        <td>
+          <label for="hex">DWORD Hex:</label>
+        </td>
+        <td>
+          <input id="hex" maxlength="8" />
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <label for="armv5">Enable ARMv5 instructions</label>
+        </td>
+        <td>
+          <input id="armv5" type="checkbox" />
+        </td>
+      </tr>
+      <tr>
+        <td>
+          Binary:
+        </td>
+        <td id="bin-parsed">
+        </td>
+      </tr>
+      <tr>
+        <td>
+          Command:
+        </td>
+        <td id="cmd">
+        </td>
+      </tr>
+      </table>
+      <div class="block">
+        <div id="bin"></div>
+        <div id="ops"></div>
+      </div>
+    <pre class="hint">
+    </pre>
+    <pre class="hint instruction-psr-imm">
+    </pre>
+    <pre class="hint instruction-psr-reg">
+    </pre>
+    <pre class="hint instruction-bx-blx">
+Branch and Exchange (BX, BLX_reg)
+  Bit    Expl.
+  31-28  Condition
+  27-8   Must be "0001.0010.1111.1111.1111" for this instruction
+  7-4    Opcode
+          0001b: BX{cond}  Rn    ;PC=Rn, T=Rn.0  (ARMv4T and ARMv5 and up)
+          0011b: BLX{cond} Rn    ;PC=Rn, T=Rn.0, LR=PC+4    (ARMv5 and up)
+  3-0    Rn - Operand Register  (R0-R14)
+Switching to THUMB Mode: Set Bit 0 of the value in Rn to 1, program continues then at Rn-1 in THUMB mode.
+
+Results in undefined behaviour if using R15 (PC+8 itself) as operand. Using BLX R14 is possible (sets PC=Old_LR, and New_LR=retadr).
+
+Execution Time: 2S + 1N
+
+Return: No flags affected.
+    </pre>
+    <pre class="hint instruction-clz--arm9">
+Count Leading Zeros (CLZ)
+  Bit    Expl.
+  31-28  Condition
+  27-16  Must be 0001.0110.1111b for this instruction
+         Opcode (fixed)
+           CLZ{cond} Rd,Rm  ;Rd=Number of leading zeros in Rm
+  15-12  Rd - Destination Register              (R0-R14)
+  11-4   Must be 1111.0001b for this instruction
+  3-0    Rm - Source Register                   (R0-R14)
+CLZ supported by ARMv5 and up. Execution time: 1S.
+
+Return: No Flags affected. Rd=0..32.
+    </pre>
+    <pre class="hint instruction-qalu-arm9">
+    </pre>
+    <pre class="hint instruction-multiply">
+    </pre>
+    <pre class="hint instruction-mullong">
+    </pre>
+    <pre class="hint instruction-mulhalfarm9">
+    </pre>
+    <pre class="hint instruction-transswp12">
+    </pre>
+    <pre class="hint instruction-transreg10">
+    </pre>
+    <pre class="hint instruction-trasimm10">
+    </pre>
+    <pre class="hint instruction-transimm9">
+    </pre>
+    <pre class="hint instruction-transreg9">
+    </pre>
+    <pre class="hint instruction-undefined">
+Undefined Instruction (und exception)
+  Bit    Expl.
+  31-28  Condition
+  27-25  Must be 011b for this instruction
+  24-5   Reserved for future use
+  4      Must be 1b for this instruction
+  3-0    Reserved for future use
+No assembler mnemonic exists, following bitstreams are (not) reserved.
+
+  cond011xxxxxxxxxxxxxxxxxxxx1xxxx - reserved for future use (except below).
+  cond01111111xxxxxxxxxxxx1111xxxx - free for user.
+Execution time: 2S+1I+1N.
+    </pre>
+    <pre class="hint Instruction-blocktrans">
+    </pre>
+    <pre class="hint instruction-b-bl-blx"> 
+Branch and Branch with Link (B, BL, BLX_imm)
+Branch (B) is supposed to jump to a subroutine.
+Branch with Link is meant to be used to call to a subroutine, return address is then saved in R14.
+
+  Bit    Expl.
+  31-28  Condition (must be 1111b for BLX)
+  27-25  Must be "101" for this instruction
+  24     Opcode (0-1) (or Halfword Offset for BLX)
+          0: B{cond} label    ;branch            PC=PC+8+nn*4
+          1: BL{cond} label   ;branch/link       PC=PC+8+nn*4, LR=PC+4
+          H: BLX label ;ARM9  ;branch/link/thumb PC=PC+8+nn*4+H*2, LR=PC+4, T=1
+  23-0   nn - Signed Offset, step 4      (-32M..+32M in steps of 4)
+Branch with Link can be used to ‘call’ to a sub-routine, which may then ‘return’ by MOV PC,R14 for example.
+
+Execution Time: 2S + 1N
+
+Return: No flags affected.    
+    </pre>
+     <pre class="hint instruction-codatatrans">
+Coprocessor Data Transfers (LDC, STC) (with Memory read/write)
+  Bit    Expl.
+  31-28  Condition (or 1111b for LDC2/STC2 opcodes on ARMv5 and up)
+  27-25  Must be 110b for this instruction
+  24     P - Pre/Post (0=post; add offset after transfer, 1=pre; before trans.)
+  23     U - Up/Down Bit (0=down; subtract offset from base, 1=up; add to base)
+  22     N - Transfer length (0-1, interpretation depends on co-processor)
+  21     W - Write-back bit (0=no write-back, 1=write address into base)
+  20     Opcode (0-1)
+          0: STC{cond}{L} Pn,Cd,<Address>  ;Store to memory (from coprocessor)
+          0: STC2{L}      Pn,Cd,<Address>  ;Store to memory (from coprocessor)
+          1: LDC{cond}{L} Pn,Cd,<Address>  ;Read from memory (to coprocessor)
+          1: LDC2{L}      Pn,Cd,<Address>  ;Read from memory (to coprocessor)
+          whereas {L} indicates long transfer (Bit 22: N=1)
+  19-16  Rn     - ARM Base Register              (R0-R15)     (R15=PC+8)
+  15-12  Cd     - Coprocessor src/dest Register  (C0-C15)
+  11-8   Pn     - Coprocessor number             (P0-P15)
+  7-0    Offset - Unsigned Immediate, step 4     (0-1020, in steps of 4)
+LDC/STC supported by ARMv2 and up, LDC2/STC2 by ARMv5 and up.
+
+Execution time: (n-1)S+2N+bI, n=number of words transferred.
+
+For details refer to original ARM docs, irrelevant in GBA because no coprocessor exists.
+    </pre>
+    <pre class="hint instruction-corr-arm9">
+    </pre>    
+    <pre class="hint instruction-codataop">
+Coprocessor Data Operations (CDP) (without Memory or ARM Register operand)
+  Bit    Expl.
+  31-28  Condition (or 1111b for CDP2 opcode on ARMv5 and up)
+  27-24  Must be 1110b for this instruction
+         ARM-Opcode (fixed)
+           CDP{cond} Pn,<cpopc>,Cd,Cn,Cm{,<cp>}
+           CDP2      Pn,<cpopc>,Cd,Cn,Cm{,<cp>}
+  23-20  CP Opc - Coprocessor operation code       (0-15)
+  19-16  Cn     - Coprocessor operand Register     (C0-C15)
+  15-12  Cd     - Coprocessor destination Register (C0-C15)
+  11-8   Pn     - Coprocessor number               (P0-P15)
+  7-5    CP     - Coprocessor information          (0-7)
+  4      Reserved, must be zero (otherwise MCR/MRC opcode)
+  3-0    Cm     - Coprocessor operand Register     (C0-C15)
+CDP supported by ARMv2 and up, CDP2 by ARMv5 and up.
+
+Execution time: 1S+bI, b=number of cycles in coprocessor busy-wait loop.
+
+Return: No flags affected, no ARM-registers used/modified.
+
+For details refer to original ARM docs, irrelevant in GBA because no coprocessor exists.
+    </pre>
+    <pre class="hint instruction-coregtrans">
+Coprocessor Register Transfers (MRC, MCR) (with ARM Register read/write)
+  Bit    Expl.
+  31-28  Condition (or 1111b for MRC2/MCR2 opcodes on ARMv5 and up)
+  27-24  Must be 1110b for this instruction
+  23-21  CP Opc - Coprocessor operation code         (0-7)
+  20     ARM-Opcode (0-1)
+          0: MCR{cond} Pn,<cpopc>,Rd,Cn,Cm{,<cp>}   ;move from ARM to CoPro
+          0: MCR2      Pn,<cpopc>,Rd,Cn,Cm{,<cp>}   ;move from ARM to CoPro
+          1: MRC{cond} Pn,<cpopc>,Rd,Cn,Cm{,<cp>}   ;move from CoPro to ARM
+          1: MRC2      Pn,<cpopc>,Rd,Cn,Cm{,<cp>}   ;move from CoPro to ARM
+  19-16  Cn     - Coprocessor source/dest. Register  (C0-C15)
+  15-12  Rd     - ARM source/destination Register    (R0-R15)
+  11-8   Pn     - Coprocessor number                 (P0-P15)
+  7-5    CP     - Coprocessor information            (0-7)
+  4      Reserved, must be one (1) (otherwise CDP opcode)
+  3-0    Cm     - Coprocessor operand Register       (C0-C15)
+MCR/MRC supported by ARMv2 and up, MCR2/MRC2 by ARMv5 and up.
+
+A22i syntax allows to use MOV with Rd specified as first (dest), or last (source) operand. Native MCR/MRC syntax uses Rd as middle operand, <cp> can be ommited if <cp> is zero.
+
+When using MCR with R15: Coprocessor will receive a data value of PC+12.
+
+When using MRC with R15: Bit 31-28 of data are copied to Bit 31-28 of CPSR (ie. N,Z,C,V flags), other data bits are ignored, CPSR Bit 27-0 are not affected, R15 (PC) is not affected.
+
+Execution time: 1S+bI+1C for MCR, 1S+(b+1)I+1C for MRC.
+
+Return: For MRC only: Either R0-R14 modified, or flags affected (see above).
+
+For details refer to original ARM docs. The opcodes irrelevant for GBA/NDS7 because no coprocessor exists (except for a dummy CP14 unit). However, NDS9 includes a working CP15 unit.
+    </pre>
+    <pre class="hint instruction-swi instruction-bkpt-arm9">
+Software Interrupt (SWI/BKPT) (svc/abt exceptions)
+SWI supposed for calls to the operating system - Enter Supervisor mode (SVC) in ARM state. BKPT intended for debugging - enters Abort mode in ARM state via Prefetch Abort vector.
+
+  Bit    Expl.
+  31-28  Condition (must be 1110b for BKPT, ie. Condition=always)
+  27-24  Opcode
+          1111b: SWI{cond} nn   ;software interrupt
+          0001b: BKPT      nn   ;breakpoint (ARMv5 and up)
+  For SWI:
+   23-0   nn - Comment Field, ignored by processor (24bit value)
+  For BKPT:
+   23-20  Must be 0010b for BKPT
+   19-8   nn - upper 12bits of comment field, ignored by processor
+   7-4    Must be 0111b for BKPT
+   3-0    nn - lower 4bits of comment field, ignored by processor
+Execution Time: 2S+1N
+
+The exception handler may interprete the SWI Comment Field by examining the lower 24bit of the 32bit opcode opcode at [R14_svc-4]. If your are also using SWI’s from inside of THUMB, then the SWI handler must examine the T Bit SPSR_svc in order to determine whether it’s been a THUMB SWI - and if so, examine the lower 8bit of the 16bit opcode opcode at [R14_svc-2].
+
+For Returning from SWI use “MOVS PC,R14”, that instruction does restore both PC and CPSR, ie. PC=R14_svc, and CPSR=SPSR_svc.
+
+Nesting SWIs: SPSR_svc and R14_svc should be saved on stack before either invoking nested SWIs, or (if the IRQ handler uses SWIs) before enabling IRQs.
+
+Execution SWI/BKPT:
+
+  R14_svc=PC+4     R14_abt=PC+4   ;save return address
+  SPSR_svc=CPSR    SPSR_abt=CPSR  ;save CPSR flags
+  CPSR=<changed>   CPSR=<changed> ;Enter svc/abt, ARM state, IRQs disabled
+  PC=VVVV0008h     PC=VVVV000Ch   ;jump to SWI/PrefetchAbort vector address
+    </pre>
+    </div>
+
+<script>
+var table = `
+|_Cond__|0_0_0|___Op__|S|__Rn___|__Rd___|__Shift__|Typ|0|__Rm___| DataProc
+|_Cond__|0_0_0|___Op__|S|__Rn___|__Rd___|__Rs___|0|Typ|1|__Rm___| DataProc
+|_Cond__|0_0_1|___Op__|S|__Rn___|__Rd___|_Shift_|___Immediate___| DataProc
+|_Cond__|0_0_1_1_0|P|1|0|_Field_|__Rd___|_Shift_|___Immediate___| PSR Imm
+|_Cond__|0_0_0_1_0|P|L|0|_Field_|__Rd___|0_0_0_0|0_0_0_0|__Rm___| PSR Reg
+|_Cond__|0_0_0_1_0_0_1_0_1_1_1_1_1_1_1_1_1_1_1_1|0_0|L|1|__Rn___| BX,BLX
+|1_1_1_0|0_0_0_1_0_0_1_0|_____immediate_________|0_1_1_1|_immed_| BKPT ARM9
+|_Cond__|0_0_0_1_0_1_1_0_1_1_1_1|__Rd___|1_1_1_1|0_0_0_1|__Rm___| CLZ  ARM9
+|_Cond__|0_0_0_1_0|Op_|0|__Rn___|__Rd___|0_0_0_0|0_1_0_1|__Rm___| QALU ARM9
+|_Cond__|0_0_0_0_0_0|A|S|__Rd___|__Rn___|__Rs___|1_0_0_1|__Rm___| Multiply
+|_Cond__|0_0_0_0_1|U|A|S|_RdHi__|_RdLo__|__Rs___|1_0_0_1|__Rm___| MulLong
+|_Cond__|0_0_0_1_0|Op_|0|Rd/RdHi|Rn/RdLo|__Rs___|1|y|x|0|__Rm___| MulHalfARM9
+|_Cond__|0_0_0_1_0|B|0_0|__Rn___|__Rd___|0_0_0_0|1_0_0_1|__Rm___| TransSwp12
+|_Cond__|0_0_0|P|U|0|W|L|__Rn___|__Rd___|0_0_0_0|1|S|H|1|__Rm___| TransReg10
+|_Cond__|0_0_0|P|U|1|W|L|__Rn___|__Rd___|OffsetH|1|S|H|1|OffsetL| TransImm10
+|_Cond__|0_1_0|P|U|B|W|L|__Rn___|__Rd___|_________Offset________| TransImm9
+|_Cond__|0_1_1|P|U|B|W|L|__Rn___|__Rd___|__Shift__|Typ|0|__Rm___| TransReg9
+|_Cond__|0_1_1|________________xxx____________________|1|__xxx__| Undefined
+|_Cond__|1_0_0|P|U|S|W|L|__Rn___|__________Register_List________| BlockTrans
+|_Cond__|1_0_1|L|___________________Offset______________________| B,BL,BLX
+|_Cond__|1_1_0|P|U|N|W|L|__Rn___|__CRd__|__CP#__|____Offset_____| CoDataTrans
+|_Cond__|1_1_0_0_0_1_0|L|__Rn___|__Rd___|__CP#__|_CPopc_|__CRm__| CoRR ARM9
+|_Cond__|1_1_1_0|_CPopc_|__CRn__|__CRd__|__CP#__|_CP__|0|__CRm__| CoDataOp
+|_Cond__|1_1_1_0|CPopc|L|__CRn__|__Rd___|__CP#__|_CP__|1|__CRm__| CoRegTrans
+|_Cond__|1_1_1_1|_____________Ignored_by_Processor______________| SWI
+`;
+
+function hex2bin(hex){
+    return (parseInt(hex, 16).toString(2)).padStart(32, '0');
+}
+
+
+function reverseString(str) {
+    return str.split("").reverse().join("");
+}
+
+
+function getMatchCount(bin, mask){
+  var matchCount = 0
+  for (var i in mask){
+    if (mask[i] === bin[i]){
+      matchCount++;
+    }
+    // If significant bit does not match - bail out
+    if (['0', '1'].indexOf(mask[i]) !== -1 && mask[i] !== bin[i]){
+      return 0;
+    }
+
+  }
+  return matchCount;
+}
+
+
+function sliceBin(bin, fields){
+  var str = ""
+  bin = reverseString(bin);
+  Object.keys(fields).forEach(key => {
+    const value = fields[key];
+    const part=bin.substring(value.start, value.end+1)
+    str = "<span class='operands' data-start='" + value.start + "' title='" + key + "'>" + reverseString(part) + "</span>" +str
+  });
+  return str;
+}
+
+function onInput(){
+  $(".operands").remove();
+  $(".tooltip").remove();
+  $("#cmd").text("");
+  $("#bin-parsed").text("");
+  $('.hint').hide()
+
+  var hex = $("#hex").val();
+  if (hex.length > 4) {  
+    var bin = hex2bin(hex);
+    var bestMatchCount = 0;
+    var instruction = {};
+    for (var cmd in instructions){
+      var currentInstruction = instructions[cmd]; 
+      if (currentInstruction.command.toLowerCase().indexOf('arm9') !==-1 && !$('#armv5').is(':checked')){
+        continue;
+      }
+      var currentMatchCount = getMatchCount(bin, currentInstruction.mask);
+      console.log(currentInstruction.command);
+ //     console.log(currentInstruction.mask);
+ //     console.log(currentMatchCount);
+
+      if (currentMatchCount > 0 && currentMatchCount > bestMatchCount) {
+        bestMatchCount = currentMatchCount;
+        instruction = currentInstruction;
+      }
+    }
+    if (bestMatchCount > 0){
+      $("#cmd").text(instruction.command)
+      $("#bin-parsed").text(bin);
+      $('.instruction-' + instruction.command.toLowerCase().replaceAll(',', '-').replaceAll(' ', '-')).show()
+      console.log(instruction.command.toLowerCase().replaceAll([',', ' '], '-'))
+
+      $("#bin").html(sliceBin(bin, instruction.fields));
+      var items = document.querySelectorAll("[data-start]");
+      var itemsArray = Array.from(items);
+      let sorted = itemsArray.sort(sorter);
+      function sorter(a,b) {
+        return parseInt(b.dataset.start) - parseInt(a.dataset.start); 
+      }
+      sorted.forEach(e => document.querySelector("#ops").appendChild(e));
+      $(".operands").each(function(){
+         var coord = $(this).offset();
+        $('<div class="tooltip">' + $(this).attr('title') + '</div>').css({left: coord.left + 'px'}).insertAfter("#ops")       
+      }) 
+    }
+  }
+}
+
+var lines = table.split("\n");
+var instructions = [];
+
+lines.forEach(line => {
+  if (line.trim() === ""){
+    return;
+  }
+  var current = {fields: {}};
+  var cmd = line.match(/[^|]*$/)[0].trim();
+  //console.log(line);
+  var mask = "";
+  var field = "";
+  var startBit = 0;
+  for (var i = 63; i>=0; i--){
+    var currentBit = 32 - Math.ceil(i/2);
+    if (i % 2 === 1 && ["0", "1"].indexOf(line[i]) !== -1){
+      mask = line[i] + mask;
+    } else if (i % 2 === 1) {
+      mask = "x" + mask;
+    }
+    
+    if (["_", "|"].indexOf(line[i]) === -1) {
+      field = line[i] + field;
+      //console.log("field now " + field)
+    }
+    if (line[i] === "|" && field !== ""){
+      stop = currentBit -1;
+      //console.log(`${field} starts at ${startBit} ends at ${stop}`);
+      current.fields[field] = {'start': startBit, 'end': stop};
+      startBit = currentBit;
+      field = "";
+    }
+  }
+    current.mask = mask;
+    current.command = cmd;
+    instructions.push(current);
+});
+console.log(instructions);
+
+$("#hex").on("input", onInput);
+$("#armv5").on("click", onInput);
+
+    </script>
+  </body>
+</html>
